@@ -1,0 +1,11 @@
+{
+  "name": "communitymap-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Express API for CommunityMap",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "lint": "eslint ."
+  }
+}
