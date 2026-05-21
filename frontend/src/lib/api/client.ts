@@ -1,7 +1,5 @@
 import type { AppUser, Report, ReportStatus } from "@/types/community-map";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
+import { API_BASE_URL, readApiResponse } from "./base";
 
 export class ClientApiError extends Error {
   status: number;
@@ -26,16 +24,11 @@ async function clientRequest<T>(
     headers,
   });
 
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new ClientApiError(
-      response.status,
-      payload?.error?.message || "Gagal memproses permintaan.",
-    );
-  }
-
-  return payload.data as T;
+  return readApiResponse(
+    response,
+    (status, message) => new ClientApiError(status, message),
+    "Gagal memproses permintaan.",
+  );
 }
 
 export async function login(input: {

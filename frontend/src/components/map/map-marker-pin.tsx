@@ -1,7 +1,7 @@
 "use client";
 
 import { CategoryIcon } from "@/components/ui/category-icon";
-import { statusColors } from "@/data/report-metadata";
+import { statusColors } from "@/features/reports/catalog";
 import { cn } from "@/lib/utils";
 import type { Report } from "@/types/community-map";
 

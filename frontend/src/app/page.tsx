@@ -10,7 +10,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AppHeader } from "@/components/layout/app-header";
 import { HeroScene } from "@/components/landing/hero-scene";
-import { getReports } from "@/lib/api";
+import { getReports } from "@/lib/api/server";
 
 const steps = [
   {
@@ -30,14 +30,29 @@ const steps = [
   },
 ];
 
-const adminHighlights = [
-  { value: "312", label: "Laporan Baru", icon: Bell },
-  { value: "356", label: "Diverifikasi", icon: ShieldCheck },
-  { value: "282", label: "Selesai", icon: CheckCircle2 },
-];
-
 export default async function HomePage() {
   const reports = await getReports();
+  const adminHighlights = [
+    {
+      value: String(reports.filter((report) => report.status === "new").length),
+      label: "Laporan Baru",
+      icon: Bell,
+    },
+    {
+      value: String(
+        reports.filter((report) => report.status === "verified").length,
+      ),
+      label: "Diverifikasi",
+      icon: ShieldCheck,
+    },
+    {
+      value: String(
+        reports.filter((report) => report.status === "resolved").length,
+      ),
+      label: "Selesai",
+      icon: CheckCircle2,
+    },
+  ];
 
   return (
     <>

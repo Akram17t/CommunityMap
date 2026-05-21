@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
 import { ReportDetail } from "@/components/report/report-detail";
-import { getReportById } from "@/lib/api";
+import { getReportById } from "@/lib/api/server";
 
 export default async function ReportDetailPage({
   params,

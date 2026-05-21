@@ -9,8 +9,8 @@
     "dev:frontend": "npm run dev --prefix frontend",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "lint": "npm run lint --prefix frontend",
-    "test:smoke": "node scripts/smoke-test.cjs"
+    "stack:up": "run.bat",
+    "lint": "npm run lint --prefix frontend"
   },
   "devDependencies": {
     "concurrently": "^9.2.0",

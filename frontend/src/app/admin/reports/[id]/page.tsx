@@ -3,7 +3,7 @@ import { AdminShell } from "@/components/layout/admin-shell";
 import { AdminReportDetail } from "@/components/dashboard/admin-report-detail";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getReportById, safeGetCurrentUser } from "@/lib/api";
+import { getReportById, safeGetCurrentUser } from "@/lib/api/server";
 
 export default async function AdminReportDetailPage({
   params,

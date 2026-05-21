@@ -46,9 +46,9 @@ export function Map({
       }
     : {
         initialViewState: initialViewState ?? {
-          longitude: 106.8456,
-          latitude: -6.2088,
-          zoom: 10.8,
+          longitude: 110.05,
+          latitude: -7.35,
+          zoom: 6.3,
         },
       };
 

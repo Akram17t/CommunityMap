@@ -5,10 +5,10 @@ import { Filter, Search, ThumbsUp } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { CategoryIcon } from "@/components/ui/category-icon";
-import { Map, MapControls, MapMarker, MapRoute } from "@/components/ui/map";
+import { Map, MapControls, MapMarker } from "@/components/ui/map";
 import { MiniBadge, StatusBadge } from "@/components/ui/badge";
-import { categories, statusLabels } from "@/data/report-metadata";
-import { removeUpvote, upvoteReport } from "@/lib/api-client";
+import { categories, statusLabels } from "@/features/reports/catalog";
+import { removeUpvote, upvoteReport } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type {
   Report,
@@ -232,18 +232,10 @@ export function PublicMap({
           />
         </div>
         <Map
-          initialViewState={{ longitude: 106.8456, latitude: -6.2088, zoom: 10.5 }}
+          initialViewState={{ longitude: 110.05, latitude: -7.35, zoom: 6.3 }}
           className="h-full min-h-[460px] w-full"
         >
           <MapControls position="top-right" />
-          {filteredReports.length > 1 && (
-            <MapRoute
-              coordinates={filteredReports.map((report) => [
-                report.coordinates.longitude,
-                report.coordinates.latitude,
-              ])}
-            />
-          )}
           {filteredReports.map((report) => (
             <MapMarker
               key={report.id}

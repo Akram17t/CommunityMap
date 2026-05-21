@@ -1,6 +1,6 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { PublicMap } from "@/components/map/public-map";
-import { getReports } from "@/lib/api";
+import { getReports } from "@/lib/api/server";
 
 export default async function MapPage() {
   const reports = await getReports();

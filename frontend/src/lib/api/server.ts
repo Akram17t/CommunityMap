@@ -2,11 +2,11 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import type { AdminStats, AppUser, Report } from "@/types/community-map";
+import { API_BASE_URL, isNetworkError, readApiResponse } from "./base";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
+const devFallbackEnabled = process.env.NODE_ENV !== "production";
 
-class ServerApiError extends Error {
+export class ServerApiError extends Error {
   status: number;
 
   constructor(status: number, message: string) {
@@ -35,20 +35,35 @@ async function serverRequest<T>(path: string, init?: RequestInit): Promise<T> {
     headers,
   });
 
-  const payload = await response.json().catch(() => ({}));
+  return readApiResponse(
+    response,
+    (status, message) => new ServerApiError(status, message),
+    "Gagal mengambil data dari backend.",
+  );
+}
 
-  if (!response.ok) {
-    throw new ServerApiError(
-      response.status,
-      payload?.error?.message || "Gagal mengambil data dari backend.",
-    );
-  }
+function shouldUseDevFallback(error: unknown) {
+  return devFallbackEnabled && isNetworkError(error);
+}
 
-  return payload.data as T;
+function logDevFallback(path: string, error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.warn(
+    `[server-api] ${path} memakai fallback data dev karena backend tidak bisa diakses: ${message}`,
+  );
 }
 
 export async function getReports(): Promise<Report[]> {
-  return serverRequest<Report[]>("/reports");
+  try {
+    return await serverRequest<Report[]>("/reports");
+  } catch (error) {
+    if (shouldUseDevFallback(error)) {
+      logDevFallback("/reports", error);
+      return [];
+    }
+
+    throw error;
+  }
 }
 
 export async function getReportById(id: string): Promise<Report | undefined> {
@@ -59,12 +74,26 @@ export async function getReportById(id: string): Promise<Report | undefined> {
       return undefined;
     }
 
+    if (shouldUseDevFallback(error)) {
+      logDevFallback(`/reports/${id}`, error);
+      return undefined;
+    }
+
     throw error;
   }
 }
 
 export async function getMyReports(): Promise<Report[]> {
-  return serverRequest<Report[]>("/reports/me");
+  try {
+    return await serverRequest<Report[]>("/reports/me");
+  } catch (error) {
+    if (shouldUseDevFallback(error)) {
+      logDevFallback("/reports/me", error);
+      return [];
+    }
+
+    throw error;
+  }
 }
 
 export async function getCurrentUser(): Promise<AppUser> {
@@ -83,12 +112,31 @@ export async function safeGetCurrentUser(): Promise<AppUser | null> {
       return null;
     }
 
+    if (shouldUseDevFallback(error)) {
+      logDevFallback("/auth/me", error);
+      return null;
+    }
+
     throw error;
   }
 }
 
 export async function getAdminStats(): Promise<AdminStats> {
-  return serverRequest<AdminStats>("/admin/stats");
-}
+  try {
+    return await serverRequest<AdminStats>("/admin/stats");
+  } catch (error) {
+    if (shouldUseDevFallback(error)) {
+      logDevFallback("/admin/stats", error);
+      return {
+        totalReports: 0,
+        newReports: 0,
+        verifiedReports: 0,
+        inProgressReports: 0,
+        resolvedReports: 0,
+        upvotes: 0,
+      };
+    }
 
-export { ServerApiError };
+    throw error;
+  }
+}

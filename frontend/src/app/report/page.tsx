@@ -2,7 +2,7 @@ import { AppHeader } from "@/components/layout/app-header";
 import { ReportForm } from "@/components/report/report-form";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { safeGetCurrentUser } from "@/lib/api";
+import { safeGetCurrentUser } from "@/lib/api/server";
 
 export default async function ReportPage() {
   const currentUser = await safeGetCurrentUser();

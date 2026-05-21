@@ -5,7 +5,7 @@ import {
   MapPin,
   Waves,
 } from "lucide-react";
-import { getCategory } from "@/data/report-metadata";
+import { getCategory } from "@/features/reports/catalog";
 import { cn } from "@/lib/utils";
 import type { ReportCategorySlug } from "@/types/community-map";
 

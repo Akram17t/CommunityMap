@@ -4,7 +4,7 @@ import { MetricCard } from "@/components/dashboard/metric-card";
 import { ReportList } from "@/components/report/report-list";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getMyReports, safeGetCurrentUser } from "@/lib/api";
+import { getMyReports, safeGetCurrentUser } from "@/lib/api/server";
 
 export default async function HistoryPage() {
   const currentUser = await safeGetCurrentUser();

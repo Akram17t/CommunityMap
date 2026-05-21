@@ -80,7 +80,7 @@ function mapReportRow(row) {
 }
 
 function buildReportQuery(filters = {}) {
-  const values = [filters.viewerId || null];
+  const values = [];
   const conditions = [];
 
   if (filters.referenceCode) {

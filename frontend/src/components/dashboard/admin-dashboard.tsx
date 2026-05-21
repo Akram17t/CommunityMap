@@ -18,8 +18,8 @@ import { CategoryIcon } from "@/components/ui/category-icon";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getCategory, statusLabels } from "@/data/report-metadata";
-import { verifyReport } from "@/lib/api-client";
+import { getCategory, statusLabels } from "@/features/reports/catalog";
+import { verifyReport } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type { AppUser, Report, ReportStatus } from "@/types/community-map";
 

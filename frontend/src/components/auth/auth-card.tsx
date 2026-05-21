@@ -5,22 +5,21 @@ import { LockKeyhole, Mail, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MiniBadge } from "@/components/ui/badge";
-import { login, register } from "@/lib/api-client";
+import { login, register } from "@/lib/api/client";
 import type { UserRole } from "@/types/community-map";
 
 export function AuthCard({ mode }: { mode: "login" | "register" }) {
   const [role, setRole] = useState<UserRole>("citizen");
-  const [fullName, setFullName] = useState("Budi Santoso");
-  const [email, setEmail] = useState("warga@email.com");
-  const [password, setPassword] = useState("password");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const isRegister = mode === "register";
 
   function switchRole(nextRole: UserRole) {
     setRole(nextRole);
-    setEmail(nextRole === "admin" ? "admin@dpu.go.id" : "warga@email.com");
-    setPassword("password");
+    setFeedback(null);
   }
 
   return (

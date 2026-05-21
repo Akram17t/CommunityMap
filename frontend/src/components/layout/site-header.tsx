@@ -131,8 +131,16 @@ export function SiteHeader({
             </span>
           </div>
           {!currentUser && (
-            <ButtonLink href="/register" variant="secondary" className="hidden sm:inline-flex">
-              Daftar
+            <ButtonLink
+              href="/register"
+              variant="secondary"
+              className={cn(
+                "hidden min-w-[112px] border-white/18 bg-white text-[#071826] sm:inline-flex",
+                dark &&
+                  "hover:border-white/35 hover:bg-[#f7f9fb] hover:text-[#071826]",
+              )}
+            >
+              <span className="text-[#071826]">Daftar</span>
             </ButtonLink>
           )}
           {currentUser && <LogoutButton className="hidden sm:flex" />}

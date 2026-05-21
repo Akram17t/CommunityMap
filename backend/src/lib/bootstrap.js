@@ -149,12 +149,23 @@ async function seedDemoData() {
   }
 
   await withTransaction(async (client) => {
+    await client.query(`
+      DELETE FROM reports
+      WHERE id::text LIKE '00000000-0000-4000-8000-20%'
+    `);
+
     for (const user of demoUsers) {
       await client.query(
         `
           INSERT INTO users (id, full_name, email, password_hash, role)
           VALUES ($1, $2, $3, $4, $5)
-          ON CONFLICT (id) DO NOTHING
+          ON CONFLICT (id) DO UPDATE
+          SET
+            full_name = EXCLUDED.full_name,
+            email = EXCLUDED.email,
+            password_hash = EXCLUDED.password_hash,
+            role = EXCLUDED.role,
+            updated_at = NOW()
         `,
         [
           user.id,
@@ -196,7 +207,22 @@ async function seedDemoData() {
           VALUES (
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
           )
-          ON CONFLICT (id) DO NOTHING
+          ON CONFLICT (id) DO UPDATE
+          SET
+            reference_code = EXCLUDED.reference_code,
+            reporter_id = EXCLUDED.reporter_id,
+            category_id = EXCLUDED.category_id,
+            title = EXCLUDED.title,
+            description = EXCLUDED.description,
+            latitude = EXCLUDED.latitude,
+            longitude = EXCLUDED.longitude,
+            address = EXCLUDED.address,
+            district = EXCLUDED.district,
+            status = EXCLUDED.status,
+            is_verified = EXCLUDED.is_verified,
+            upvote_count = EXCLUDED.upvote_count,
+            created_at = EXCLUDED.created_at,
+            updated_at = EXCLUDED.updated_at
         `,
         [
           report.id,
@@ -221,7 +247,6 @@ async function seedDemoData() {
         `
           INSERT INTO report_images (id, report_id, image_url, storage_key, alt_text)
           VALUES ($1, $2, $3, $4, $5)
-          ON CONFLICT (id) DO NOTHING
         `,
         [
           report.image.id,
@@ -245,7 +270,6 @@ async function seedDemoData() {
               created_at
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (id) DO NOTHING
           `,
           [
             log.id,
@@ -256,6 +280,17 @@ async function seedDemoData() {
             log.updatedBy,
             log.createdAt,
           ],
+        );
+      }
+
+      for (const userId of report.upvoterIds || []) {
+        await client.query(
+          `
+            INSERT INTO report_upvotes (user_id, report_id)
+            VALUES ($1, $2)
+            ON CONFLICT (user_id, report_id) DO NOTHING
+          `,
+          [userId, report.id],
         );
       }
     }

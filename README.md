@@ -16,7 +16,7 @@ Cara paling cepat:
 
 ```powershell
 npm install
-npm run dev
+run.bat
 ```
 
 Lalu buka:
@@ -24,22 +24,24 @@ Lalu buka:
 - `http://localhost:3000` untuk frontend
 - `http://localhost:4000/api/health` untuk cek backend
 
+Alternatif command yang setara:
+
+```powershell
+npm run stack:up
+```
+
 Kalau sebelumnya ada server lama yang masih nyangkut di port dev, jalankan:
 
 ```powershell
 npm run dev:clean
 ```
 
-Untuk smoke test cepat setelah server hidup:
-
-```powershell
-npm run test:smoke
-```
-
 ## Database Lokal
 
 - Jika Docker Desktop aktif, jalankan `npm run db:up` untuk PostgreSQL lokal.
 - Jika PostgreSQL belum tersedia, backend otomatis fallback ke database in-memory agar mode dev tetap bisa jalan.
+- Jika backend belum aktif saat frontend dibuka di mode development, halaman publik tetap aman dibuka dengan state kosong sampai backend siap.
+- Saat backend aktif, sistem akan mengisi akun demo dan 40 laporan seed yang tersebar di Pulau Jawa ke database yang tersedia.
 
 ## Akun Demo
 

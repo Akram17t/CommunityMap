@@ -13,8 +13,8 @@ import { useState, useTransition } from "react";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { categories } from "@/data/report-metadata";
-import { createReport } from "@/lib/api-client";
+import { categories } from "@/features/reports/catalog";
+import { createReport } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type { ReportCategorySlug } from "@/types/community-map";
 

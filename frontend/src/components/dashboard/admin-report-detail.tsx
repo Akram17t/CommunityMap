@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import { ReportDetail } from "@/components/report/report-detail";
-import { statusLabels } from "@/data/report-metadata";
-import { updateReportStatus } from "@/lib/api-client";
+import { statusLabels } from "@/features/reports/catalog";
+import { updateReportStatus } from "@/lib/api/client";
 import type { Report, ReportStatus } from "@/types/community-map";
 
 const statuses: ReportStatus[] = ["new", "verified", "in_progress", "resolved"];

@@ -1,4 +1,4 @@
-import { safeGetCurrentUser } from "@/lib/api";
+import { safeGetCurrentUser } from "@/lib/api/server";
 import { SiteHeader } from "./site-header";
 
 export async function AppHeader({ dark = false }: { dark?: boolean }) {

@@ -2,7 +2,7 @@
 
 import { LogOut } from "lucide-react";
 import { useState, useTransition } from "react";
-import { logout } from "@/lib/api-client";
+import { logout } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 
 export function LogoutButton({

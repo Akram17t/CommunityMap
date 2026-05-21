@@ -3,7 +3,7 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { AppHeader } from "@/components/layout/app-header";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { safeGetCurrentUser } from "@/lib/api";
+import { safeGetCurrentUser } from "@/lib/api/server";
 
 export default async function RegisterPage() {
   const currentUser = await safeGetCurrentUser();
