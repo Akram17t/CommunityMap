@@ -1,6 +1,5 @@
 import { Bell, CheckCircle2, Clock3, Flame, MapPinned } from "lucide-react";
 import { AppHeader } from "@/components/layout/app-header";
-import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { ReportList } from "@/components/report/report-list";
@@ -29,6 +28,7 @@ export default async function HistoryPage() {
             </div>
           </Card>
         </main>
+        <SiteFooter />
       </>
     );
   }
@@ -55,6 +55,7 @@ export default async function HistoryPage() {
             </div>
           </Card>
         </main>
+        <SiteFooter />
       </>
     );
   }

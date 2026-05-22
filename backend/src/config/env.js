@@ -22,6 +22,7 @@ const defaultOrigins = [
 const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: Number(process.env.BACKEND_PORT || 4000),
+  host: process.env.BACKEND_HOST || "127.0.0.1",
   frontendOrigins: process.env.FRONTEND_ORIGIN
     ? parseFrontendOrigins(process.env.FRONTEND_ORIGIN)
     : defaultOrigins,

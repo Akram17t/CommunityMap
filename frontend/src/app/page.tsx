@@ -11,9 +11,7 @@ import { Card } from "@/components/ui/card";
 import { AppHeader } from "@/components/layout/app-header";
 import { HeroScene } from "@/components/landing/hero-scene";
 import { getReports } from "@/lib/api/server";
-import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { HeroScene } from "@/components/landing/hero-scene";
 import { AboutSection } from "@/components/landing/about-section";
 
 const steps = [

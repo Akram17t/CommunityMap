@@ -1,5 +1,4 @@
 import { AppHeader } from "@/components/layout/app-header";
-import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { ReportForm } from "@/components/report/report-form";
 import { ButtonLink } from "@/components/ui/button";

@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
-import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { ReportDetail } from "@/components/report/report-detail";
 import { getReportById } from "@/lib/api/server";
@@ -27,4 +26,3 @@ export default async function ReportDetailPage({
     </>
   );
 }
-

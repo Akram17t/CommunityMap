@@ -5,8 +5,10 @@ const { initializeDatabase } = require("./lib/bootstrap");
 async function start() {
   await initializeDatabase();
 
-  const server = app.listen(env.port, () => {
-    console.log(`CommunityMap backend listening on http://localhost:${env.port}`);
+  const server = app.listen(env.port, env.host, () => {
+    console.log(
+      `CommunityMap backend listening on http://${env.host}:${env.port}`,
+    );
   });
 
   server.on("error", (error) => {

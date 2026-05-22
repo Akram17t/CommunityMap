@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AppHeader } from "@/components/layout/app-header";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { safeGetCurrentUser } from "@/lib/api/server";
 
 export default async function LoginPage() {
   const currentUser = await safeGetCurrentUser();
-import { SiteHeader } from "@/components/layout/site-header";
-import { SiteFooter } from "@/components/layout/site-footer";
 
   return (
     <>

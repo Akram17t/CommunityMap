@@ -1,5 +1,4 @@
 import { AppHeader } from "@/components/layout/app-header";
-import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { PublicMap } from "@/components/map/public-map";
 import { getReports } from "@/lib/api/server";
