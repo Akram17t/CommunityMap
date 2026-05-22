@@ -7,6 +7,8 @@ import { safeGetCurrentUser } from "@/lib/api/server";
 
 export default async function RegisterPage() {
   const currentUser = await safeGetCurrentUser();
+import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/layout/site-footer";
 
   return (
     <>
@@ -45,6 +47,7 @@ export default async function RegisterPage() {
           )}
         </div>
       </main>
+      <SiteFooter />
     </>
   );
 }

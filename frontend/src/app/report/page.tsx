@@ -1,4 +1,6 @@
 import { AppHeader } from "@/components/layout/app-header";
+import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { ReportForm } from "@/components/report/report-form";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -49,6 +51,7 @@ export default async function ReportPage() {
           <ReportForm />
         )}
       </main>
+      <SiteFooter />
     </>
   );
 }
