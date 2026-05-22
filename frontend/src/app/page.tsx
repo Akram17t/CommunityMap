@@ -8,6 +8,9 @@ import {
 import { PublicMap } from "@/components/map/public-map";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { AppHeader } from "@/components/layout/app-header";
+import { HeroScene } from "@/components/landing/hero-scene";
+import { getReports } from "@/lib/api/server";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { HeroScene } from "@/components/landing/hero-scene";
@@ -31,16 +34,33 @@ const steps = [
   },
 ];
 
-const adminHighlights = [
-  { value: "312", label: "Laporan Baru", icon: Bell },
-  { value: "356", label: "Diverifikasi", icon: ShieldCheck },
-  { value: "282", label: "Selesai", icon: CheckCircle2 },
-];
+export default async function HomePage() {
+  const reports = await getReports();
+  const adminHighlights = [
+    {
+      value: String(reports.filter((report) => report.status === "new").length),
+      label: "Laporan Baru",
+      icon: Bell,
+    },
+    {
+      value: String(
+        reports.filter((report) => report.status === "verified").length,
+      ),
+      label: "Diverifikasi",
+      icon: ShieldCheck,
+    },
+    {
+      value: String(
+        reports.filter((report) => report.status === "resolved").length,
+      ),
+      label: "Selesai",
+      icon: CheckCircle2,
+    },
+  ];
 
-export default function HomePage() {
   return (
     <>
-      <SiteHeader dark />
+      <AppHeader dark />
       <main>
         <HeroScene />
 
@@ -93,7 +113,7 @@ export default function HomePage() {
                 Buka Peta Lengkap
               </ButtonLink>
             </div>
-            <PublicMap compact />
+            <PublicMap compact initialReports={reports} />
           </div>
         </section>
 

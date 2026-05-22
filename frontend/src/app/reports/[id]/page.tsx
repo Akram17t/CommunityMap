@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
+import { AppHeader } from "@/components/layout/app-header";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { ReportDetail } from "@/components/report/report-detail";
-import { getReportById } from "@/lib/api";
+import { getReportById } from "@/lib/api/server";
 
 export default async function ReportDetailPage({
   params,
@@ -18,7 +19,7 @@ export default async function ReportDetailPage({
 
   return (
     <>
-      <SiteHeader />
+      <AppHeader />
       <main className="min-h-screen bg-[var(--background)] px-4 py-8 sm:px-6 lg:px-8">
         <ReportDetail report={report} />
       </main>

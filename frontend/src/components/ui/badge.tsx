@@ -1,4 +1,4 @@
-import { getStatusLabel, statusColors } from "@/data/mock-data";
+import { getStatusLabel, statusColors } from "@/features/reports/catalog";
 import { cn } from "@/lib/utils";
 import type { ReportStatus } from "@/types/community-map";
 
