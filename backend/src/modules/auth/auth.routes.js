@@ -3,7 +3,7 @@ const { query } = require("../../lib/db");
 const { hashPassword, serializeUser, signToken } = require("../../lib/auth");
 const { assert } = require("../../lib/http");
 const { env } = require("../../config/env");
-const { authenticateUser } = require("./auth.service");
+const { authenticateUser, updateUserProfile } = require("./auth.service");
 const { requireAuth } = require("../../middlewares/auth");
 
 const router = express.Router();
@@ -20,8 +20,10 @@ function setAuthCookie(res, token) {
 
 router.post("/register", async (req, res, next) => {
   try {
-    const { fullName, email, password, role = "citizen" } = req.body || {};
+    const { username, fullName, email, password, role = "citizen" } = req.body || {};
 
+    assert(username?.trim(), 400, "Username wajib diisi.");
+    assert(/^[a-zA-Z0-9_]+$/.test(username), 400, "Username hanya boleh berisi huruf, angka, dan underscore.");
     assert(fullName?.trim(), 400, "Nama lengkap wajib diisi.");
     assert(email?.trim(), 400, "Email wajib diisi.");
     assert(password?.trim(), 400, "Password wajib diisi.");
@@ -31,20 +33,26 @@ router.post("/register", async (req, res, next) => {
       "Role pengguna tidak valid.",
     );
 
-    const existing = await query(
+    const existingEmail = await query(
       "SELECT id FROM users WHERE lower(email) = lower($1)",
       [email],
     );
-    assert(existing.rowCount === 0, 409, "Email sudah terdaftar.");
+    assert(existingEmail.rowCount === 0, 409, "Email sudah terdaftar.");
+
+    const existingUsername = await query(
+      "SELECT id FROM users WHERE lower(username) = lower($1)",
+      [username],
+    );
+    assert(existingUsername.rowCount === 0, 409, "Username sudah terdaftar.");
 
     const passwordHash = await hashPassword(password);
     const result = await query(
       `
-        INSERT INTO users (full_name, email, password_hash, role, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, NOW(), NOW())
-        RETURNING id, full_name, email, role
+        INSERT INTO users (username, full_name, email, password_hash, role, avatar_url, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NULL, NOW(), NOW())
+        RETURNING id, username, full_name, email, role, avatar_url
       `,
-      [fullName.trim(), email.trim().toLowerCase(), passwordHash, role],
+      [username.trim(), fullName.trim(), email.trim().toLowerCase(), passwordHash, role],
     );
 
     const user = serializeUser(result.rows[0]);
@@ -99,6 +107,22 @@ router.get("/me", requireAuth, async (req, res) => {
       user: serializeUser(req.user),
     },
   });
+});
+
+router.patch("/me", requireAuth, async (req, res, next) => {
+  try {
+    const user = await updateUserProfile(req.user.id, req.body || {});
+    const token = signToken(user);
+    setAuthCookie(res, token);
+
+    res.json({
+      data: {
+        user,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = { authRouter: router };

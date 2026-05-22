@@ -500,28 +500,28 @@ const regionCatalog = [
 ];
 
 const citizenProfiles = [
-  ["Budi Santoso", "warga@email.com"],
-  ["Siti Rahma", "siti@email.com"],
-  ["Nadia Putri", "nadia@email.com"],
-  ["Rizky Pratama", "rizky.pratama@email.com"],
-  ["Aulia Safitri", "aulia.safitri@email.com"],
-  ["Dimas Saputra", "dimas.saputra@email.com"],
-  ["Farhan Maulana", "farhan.maulana@email.com"],
-  ["Intan Permata", "intan.permata@email.com"],
-  ["Galih Ramadhan", "galih.ramadhan@email.com"],
-  ["Maya Lestari", "maya.lestari@email.com"],
-  ["Teguh Hidayat", "teguh.hidayat@email.com"],
-  ["Nabila Azzahra", "nabila.azzahra@email.com"],
-  ["Yoga Prakoso", "yoga.prakoso@email.com"],
-  ["Putri Maharani", "putri.maharani@email.com"],
-  ["Fajar Nugroho", "fajar.nugroho@email.com"],
-  ["Anisa Pertiwi", "anisa.pertiwi@email.com"],
-  ["Bagas Kurniawan", "bagas.kurniawan@email.com"],
-  ["Citra Ayuningtyas", "citra.ayuningtyas@email.com"],
-  ["Rama Saputro", "rama.saputro@email.com"],
-  ["Lia Wulandari", "lia.wulandari@email.com"],
-  ["Dewi Anggraini", "dewi.anggraini@email.com"],
-  ["Arif Setiawan", "arif.setiawan@email.com"],
+  ["Budi Santoso", "warga@email.com", "budisantoso"],
+  ["Siti Rahma", "siti@email.com", "sitirahma"],
+  ["Nadia Putri", "nadia@email.com", "nadiaputri"],
+  ["Rizky Pratama", "rizky.pratama@email.com", "rizkypratama"],
+  ["Aulia Safitri", "aulia.safitri@email.com", "auliasafitri"],
+  ["Dimas Saputra", "dimas.saputra@email.com", "dimassaputra"],
+  ["Farhan Maulana", "farhan.maulana@email.com", "farhanmaulana"],
+  ["Intan Permata", "intan.permata@email.com", "intanpermata"],
+  ["Galih Ramadhan", "galih.ramadhan@email.com", "galihramadhan"],
+  ["Maya Lestari", "maya.lestari@email.com", "mayalestari"],
+  ["Teguh Hidayat", "teguh.hidayat@email.com", "teguhhidayat"],
+  ["Nabila Azzahra", "nabila.azzahra@email.com", "nabilaazzahra"],
+  ["Yoga Prakoso", "yoga.prakoso@email.com", "yogaprakoso"],
+  ["Putri Maharani", "putri.maharani@email.com", "putrimaharani"],
+  ["Fajar Nugroho", "fajar.nugroho@email.com", "fajarnugroho"],
+  ["Anisa Pertiwi", "anisa.pertiwi@email.com", "anisapertiwi"],
+  ["Bagas Kurniawan", "bagas.kurniawan@email.com", "bagaskurniawan"],
+  ["Citra Ayuningtyas", "citra.ayuningtyas@email.com", "citraayuningtyas"],
+  ["Rama Saputro", "rama.saputro@email.com", "ramasaputro"],
+  ["Lia Wulandari", "lia.wulandari@email.com", "liawulandari"],
+  ["Dewi Anggraini", "dewi.anggraini@email.com", "dewianggraini"],
+  ["Arif Setiawan", "arif.setiawan@email.com", "arifsetiawan"],
 ];
 
 const reporterVoices = [
@@ -541,6 +541,7 @@ function makeUuid(namespace, index) {
 const demoUsers = [
   {
     id: "11111111-1111-4111-8111-111111111111",
+    username: "budisantoso",
     fullName: "Budi Santoso",
     email: "warga@email.com",
     password: "password",
@@ -548,6 +549,7 @@ const demoUsers = [
   },
   {
     id: "22222222-2222-4222-8222-222222222222",
+    username: "adminpusat",
     fullName: "Admin DPU Pusat",
     email: "admin@dpu.go.id",
     password: "password",
@@ -555,6 +557,7 @@ const demoUsers = [
   },
   {
     id: "33333333-3333-4333-8333-333333333333",
+    username: "sitirahma",
     fullName: "Siti Rahma",
     email: "siti@email.com",
     password: "password",
@@ -562,6 +565,7 @@ const demoUsers = [
   },
   {
     id: "44444444-4444-4444-8444-444444444444",
+    username: "nadiaputri",
     fullName: "Nadia Putri",
     email: "nadia@email.com",
     password: "password",
@@ -569,6 +573,7 @@ const demoUsers = [
   },
   {
     id: "55555555-5555-4555-8555-555555555555",
+    username: "adminbarat",
     fullName: "Admin Wilayah Barat",
     email: "barat@dpu.go.id",
     password: "password",
@@ -576,13 +581,15 @@ const demoUsers = [
   },
   {
     id: "66666666-6666-4666-8666-666666666666",
+    username: "admintimur",
     fullName: "Admin Wilayah Timur",
     email: "timur@dpu.go.id",
     password: "password",
     role: "admin",
   },
-  ...citizenProfiles.slice(3).map(([fullName, email], index) => ({
+  ...citizenProfiles.slice(3).map(([fullName, email, username], index) => ({
     id: makeUuid("10", index + 1),
+    username,
     fullName,
     email,
     password: "password",

@@ -16,7 +16,9 @@ function signToken(user) {
       sub: user.id,
       role: user.role,
       email: user.email,
+      username: user.username,
       fullName: user.full_name || user.fullName,
+      avatarUrl: user.avatar_url || user.avatarUrl || null,
     },
     env.jwtSecret,
     { expiresIn: env.jwtExpiresIn },
@@ -34,9 +36,11 @@ function serializeUser(user) {
 
   return {
     id: user.id,
+    username: user.username,
     fullName: user.full_name || user.fullName,
     email: user.email,
     role: user.role,
+    avatarUrl: user.avatar_url || user.avatarUrl || null,
   };
 }
 

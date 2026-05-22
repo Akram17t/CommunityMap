@@ -1,30 +1,39 @@
 "use client";
 
 import Image from "next/image";
-import { Filter, Search, ThumbsUp } from "lucide-react";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { Filter, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { Map, MapControls, MapMarker } from "@/components/ui/map";
 import { MiniBadge, StatusBadge } from "@/components/ui/badge";
+import { ReportEngagement } from "@/components/report/report-engagement";
 import { categories, statusLabels } from "@/features/reports/catalog";
-import { removeUpvote, upvoteReport } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type {
   Report,
   ReportCategorySlug,
   ReportStatus,
 } from "@/types/community-map";
+import { useMap } from "react-map-gl/maplibre";
 import { MapMarkerPin } from "./map-marker-pin";
 
-const statuses: ReportStatus[] = ["new", "verified", "in_progress", "resolved"];
+const statuses: ReportStatus[] = [
+  "new",
+  "verified",
+  "in_progress",
+  "resolved",
+  "rejected",
+];
 
 export function PublicMap({
   compact = false,
   initialReports,
+  focusReportId,
 }: {
   compact?: boolean;
   initialReports: Report[];
+  focusReportId?: string;
 }) {
   const [reports, setReports] = useState(initialReports);
   const [categoryFilters, setCategoryFilters] = useState<ReportCategorySlug[]>([]);
@@ -35,8 +44,26 @@ export function PublicMap({
   const [search, setSearch] = useState("");
   const [districtFilter, setDistrictFilter] = useState("all");
   const [dateRange, setDateRange] = useState("all");
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+
+  const [viewport, setViewport] = useState({
+    longitude: 110.05,
+    latitude: -7.35,
+    zoom: 6.3,
+  });
+
+  useEffect(() => {
+    if (focusReportId && initialReports) {
+      const focusReport = initialReports.find(r => r.id === focusReportId);
+      if (focusReport) {
+        setSelectedReportId(focusReport.id);
+        setViewport({
+          longitude: focusReport.coordinates.longitude,
+          latitude: focusReport.coordinates.latitude,
+          zoom: 16,
+        });
+      }
+    }
+  }, [focusReportId, initialReports]);
 
   useEffect(() => {
     setReports(initialReports);
@@ -106,25 +133,10 @@ export function PublicMap({
     );
   }
 
-  function handleUpvote(report: Report) {
-    setFeedback(null);
-    startTransition(async () => {
-      try {
-        const updated = report.hasUpvoted
-          ? await removeUpvote(report.id)
-          : await upvoteReport(report.id);
-
-        setReports((current) =>
-          current.map((item) => (item.id === updated.id ? updated : item)),
-        );
-      } catch (error) {
-        setFeedback(
-          error instanceof Error
-            ? error.message
-            : "Gagal memperbarui upvote.",
-        );
-      }
-    });
+  function handleReportChange(updated: Report) {
+    setReports((current) =>
+      current.map((item) => (item.id === updated.id ? updated : item)),
+    );
   }
 
   return (
@@ -232,7 +244,8 @@ export function PublicMap({
           />
         </div>
         <Map
-          initialViewState={{ longitude: 110.05, latitude: -7.35, zoom: 6.3 }}
+          viewport={viewport}
+          onViewportChange={setViewport}
           className="h-full min-h-[460px] w-full"
         >
           <MapControls position="top-right" />
@@ -249,12 +262,8 @@ export function PublicMap({
               />
             </MapMarker>
           ))}
+          {focusReportId && <MapFlyTo focusReportId={focusReportId} reports={initialReports} />}
         </Map>
-        {feedback && (
-          <div className="absolute bottom-4 right-4 z-10 max-w-xs rounded-lg border border-[rgb(239_59_45_/_24%)] bg-white px-4 py-3 text-sm shadow-[var(--shadow)]">
-            {feedback}
-          </div>
-        )}
         <div className="absolute bottom-4 left-4 z-10 hidden rounded-lg border border-[var(--border)] bg-white p-3 shadow-[var(--shadow)] md:block">
           <p className="mb-2 text-xs font-bold">Legenda</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
@@ -272,8 +281,7 @@ export function PublicMap({
         <aside className="z-10 border-t border-[var(--border)] bg-white p-4 lg:border-l lg:border-t-0">
           <ReportMapPanel
             report={visibleSelected}
-            pending={pending}
-            onUpvote={() => handleUpvote(visibleSelected)}
+            onReportChange={handleReportChange}
           />
         </aside>
       )}
@@ -298,12 +306,10 @@ function FilterGroup({
 
 function ReportMapPanel({
   report,
-  onUpvote,
-  pending,
+  onReportChange,
 }: {
   report: Report;
-  onUpvote: () => void;
-  pending: boolean;
+  onReportChange: (report: Report) => void;
 }) {
   return (
     <div className="flex h-full flex-col gap-4">
@@ -318,8 +324,8 @@ function ReportMapPanel({
       </div>
       <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[var(--surface-strong)]">
         <Image
-          src={report.images[0].imageUrl}
-          alt={report.images[0].alt}
+          src={report.images[0]?.imageUrl || "/images/report-road.svg"}
+          alt={report.images[0]?.alt || report.title}
           fill
           sizes="340px"
           priority
@@ -339,26 +345,7 @@ function ReportMapPanel({
       <p className="text-sm leading-6 text-[var(--asphalt)]">
         {report.description}
       </p>
-      <button
-        disabled={pending}
-        onClick={onUpvote}
-        className={cn(
-          "flex items-center justify-between rounded-lg border p-4 text-left transition",
-          report.hasUpvoted
-            ? "border-[var(--danger)] bg-[rgb(239_59_45_/_8%)]"
-            : "border-[var(--border)] bg-white hover:border-[var(--danger)]",
-        )}
-      >
-        <span>
-          <span className="block text-sm font-bold">
-            {report.upvoteCount} Upvote
-          </span>
-          <span className="text-xs text-[var(--muted)]">
-            +12 warga merasakan hal serupa
-          </span>
-        </span>
-        <ThumbsUp className={report.hasUpvoted ? "size-5 text-[var(--danger)]" : "size-5"} />
-      </button>
+      <ReportEngagement report={report} compact onReportChange={onReportChange} />
       <Button
         variant="secondary"
         className="mt-auto w-full"
@@ -368,4 +355,19 @@ function ReportMapPanel({
       </Button>
     </div>
   );
+}
+
+function MapFlyTo({ focusReportId, reports }: { focusReportId: string; reports: Report[] }) {
+  const { current: map } = useMap();
+  useEffect(() => {
+    const report = reports.find((r) => r.id === focusReportId);
+    if (report && map) {
+      map.flyTo({
+        center: [report.coordinates.longitude, report.coordinates.latitude],
+        zoom: 16,
+        duration: 1500,
+      });
+    }
+  }, [focusReportId, reports, map]);
+  return null;
 }

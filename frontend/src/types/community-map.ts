@@ -2,9 +2,11 @@ export type UserRole = "citizen" | "admin";
 
 export type AppUser = {
   id: string;
+  username: string;
   fullName: string;
   email: string;
   role: UserRole;
+  avatarUrl?: string | null;
 };
 
 export type ReportCategorySlug =
@@ -14,7 +16,12 @@ export type ReportCategorySlug =
   | "flood"
   | "other";
 
-export type ReportStatus = "new" | "verified" | "in_progress" | "resolved";
+export type ReportStatus =
+  | "new"
+  | "verified"
+  | "in_progress"
+  | "resolved"
+  | "rejected";
 
 export type Coordinates = {
   latitude: number;
@@ -35,6 +42,7 @@ export type ReportImage = {
   id: string;
   imageUrl: string;
   storageKey: string;
+  kind?: "report" | "resolution_proof";
   alt: string;
 };
 
@@ -47,10 +55,25 @@ export type StatusLog = {
   createdAt: string;
 };
 
+export type ReportComment = {
+  id: string;
+  reportId: string;
+  userId: string;
+  userName: string;
+  userUsername: string;
+  userAvatarUrl?: string | null;
+  parentId?: string | null;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type Report = {
   id: string;
   reporterId: string;
   reporterName: string;
+  reporterUsername: string;
+  reporterAvatarUrl?: string | null;
   categorySlug: ReportCategorySlug;
   title: string;
   description: string;
@@ -60,11 +83,18 @@ export type Report = {
   status: ReportStatus;
   isVerified: boolean;
   upvoteCount: number;
+  downvoteCount: number;
+  commentCount: number;
+  rejectionReason?: string | null;
+  rejectedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   images: ReportImage[];
+  resolutionImages: ReportImage[];
+  comments: ReportComment[];
   statusLogs: StatusLog[];
   hasUpvoted?: boolean;
+  hasDownvoted?: boolean;
 };
 
 export type AdminStats = {
@@ -73,5 +103,7 @@ export type AdminStats = {
   verifiedReports: number;
   inProgressReports: number;
   resolvedReports: number;
+  rejectedReports: number;
   upvotes: number;
+  downvotes: number;
 };

@@ -1,9 +1,10 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ButtonLink } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,42 +12,43 @@ import type { AppUser } from "@/types/community-map";
 
 function getNavigation(currentUser: AppUser | null) {
   if (!currentUser) {
-    return [{ href: "/map", label: "Peta" }];
+    return [
+      { href: "/map", label: "Peta" },
+      { href: "/feeds", label: "Feeds" },
+    ];
   }
 
   if (currentUser.role === "admin") {
     return [
-      { href: "/map", label: "Peta" },
       { href: "/admin", label: "Dashboard" },
+      { href: "/admin/reports", label: "Laporan" },
+      { href: "/admin/verification", label: "Verifikasi" },
+      { href: "/map", label: "Peta" },
     ];
   }
 
   return [
     { href: "/map", label: "Peta" },
+    { href: "/feeds", label: "Feeds" },
     { href: "/report", label: "Lapor" },
     { href: "/history", label: "Riwayat" },
   ];
 }
 
+function getSettingsHref(currentUser: AppUser) {
+  return currentUser.role === "admin" ? "/admin/settings" : "/settings";
+}
+
 function getPrimaryAction(currentUser: AppUser | null) {
   if (!currentUser) {
-    return {
-      href: "/login",
-      label: "Masuk Dulu",
-    };
+    return { href: "/login", label: "Masuk" };
   }
 
   if (currentUser.role === "admin") {
-    return {
-      href: "/admin",
-      label: "Dashboard Petugas",
-    };
+    return { href: "/admin", label: "Dashboard" };
   }
 
-  return {
-    href: "/report",
-    label: "Laporkan Jalan",
-  };
+  return { href: "/report", label: "Laporkan Jalan" };
 }
 
 export function SiteHeader({
@@ -57,13 +59,9 @@ export function SiteHeader({
   currentUser?: AppUser | null;
 }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
   const navItems = getNavigation(currentUser);
   const primaryAction = getPrimaryAction(currentUser);
-  const roleLabel =
-    currentUser?.role === "admin" ? "Petugas" : currentUser ? "Warga" : "Tamu";
-  const statusLabel = currentUser
-    ? `Masuk sebagai ${roleLabel}`
-    : "Belum login";
 
   return (
     <header
@@ -71,11 +69,11 @@ export function SiteHeader({
         "sticky top-0 z-40 border-b backdrop-blur-xl",
         dark
           ? "border-white/10 bg-[rgb(7_24_38_/_88%)] text-white"
-          : "border-[var(--border)] bg-white/88 text-[var(--asphalt)]",
+          : "border-[var(--border)] bg-white/90 text-[var(--asphalt)]",
       )}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 font-bold">
+      <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:px-5 lg:px-6">
+        <Link href="/" className="flex min-w-0 items-center gap-2 font-bold">
           <Image
             src="/main-logo.png"
             alt="CommunityMap Logo"
@@ -83,8 +81,9 @@ export function SiteHeader({
             height={36}
             className="rounded-md object-contain"
           />
-          CommunityMap
+          <span className="hidden sm:inline">CommunityMap</span>
         </Link>
+
         <nav className="hidden items-center gap-1 md:flex">
           {navItems.map((item) => (
             <Link
@@ -105,59 +104,76 @@ export function SiteHeader({
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
-          <div className="hidden items-center gap-3 lg:flex">
-            <div className="text-right">
-              <p
+
+        <div className="flex items-center justify-end gap-2">
+          {currentUser ? (
+            <>
+              <Link
+                href={getSettingsHref(currentUser)}
                 className={cn(
-                  "text-xs font-bold uppercase tracking-[0.2em]",
-                  dark ? "text-white/62" : "text-[var(--muted)]",
+                  "hidden min-h-10 max-w-[180px] items-center truncate rounded-md border px-3 text-sm font-semibold transition sm:inline-flex",
+                  dark
+                    ? "border-white/15 bg-white/10 text-white hover:bg-white/20"
+                    : "border-[var(--border)] bg-white text-[var(--asphalt)] hover:border-[var(--teal)]",
                 )}
               >
-                {statusLabel}
-              </p>
-              <p className="text-sm font-semibold">
-                {currentUser ? currentUser.fullName : "Peta publik dapat diakses semua orang"}
-              </p>
-            </div>
-            <span
-              className={cn(
-                "inline-flex min-w-20 items-center justify-center rounded-full px-3 py-1 text-xs font-bold",
-                currentUser?.role === "admin"
-                  ? "bg-[rgb(245_197_24_/_18%)] text-[#806300]"
-                  : currentUser
-                    ? "bg-[rgb(0_107_98_/_10%)] text-[var(--teal)]"
-                    : dark
-                      ? "bg-white/10 text-white"
-                      : "bg-[var(--surface-strong)] text-[var(--muted)]",
-              )}
-            >
-              {roleLabel}
-            </span>
-          </div>
-          {!currentUser && (
-            <ButtonLink
-              href="/register"
-              variant="secondary"
-              className={cn(
-                "hidden min-w-[112px] border-white/18 bg-white text-[#071826] sm:inline-flex",
-                dark &&
-                  "hover:border-white/35 hover:bg-[#f7f9fb] hover:text-[#071826]",
-              )}
-            >
-              <span className="text-[#071826]">Daftar</span>
+                {currentUser.fullName}
+              </Link>
+              <LogoutButton className="hidden sm:flex" />
+            </>
+          ) : (
+            <ButtonLink href="/register" variant="secondary" className="hidden sm:inline-flex">
+              Daftar
             </ButtonLink>
           )}
-          {currentUser && <LogoutButton className="hidden sm:flex" />}
           <ButtonLink href={primaryAction.href} className="hidden sm:inline-flex">
             {primaryAction.label}
           </ButtonLink>
-          <button className="inline-flex size-10 items-center justify-center rounded-md border border-current/15 md:hidden">
-            <Menu className="size-5" />
+          <button
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            className="inline-flex size-10 items-center justify-center rounded-md border border-current/15 md:hidden"
+          >
+            {open ? <X className="size-5" /> : <Menu className="size-5" />}
             <span className="sr-only">Buka menu</span>
           </button>
         </div>
       </div>
+
+      {open && (
+        <div className={cn("border-t px-4 py-3 md:hidden", dark ? "border-white/10" : "border-[var(--border)]")}>
+          <nav className="flex flex-col gap-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className="rounded-md px-3 py-2 text-sm font-semibold hover:bg-black/5"
+              >
+                {item.label}
+              </Link>
+            ))}
+            {currentUser && (
+              <Link
+                href={getSettingsHref(currentUser)}
+                onClick={() => setOpen(false)}
+                className="rounded-md px-3 py-2 text-sm font-semibold hover:bg-black/5"
+              >
+                {currentUser.fullName}
+              </Link>
+            )}
+            {!currentUser && (
+              <Link
+                href="/register"
+                onClick={() => setOpen(false)}
+                className="rounded-md px-3 py-2 text-sm font-semibold hover:bg-black/5"
+              >
+                Daftar
+              </Link>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

@@ -53,6 +53,7 @@ export const statusLabels: Record<ReportStatus, string> = {
   verified: "Diverifikasi",
   in_progress: "Sedang Diperbaiki",
   resolved: "Selesai",
+  rejected: "Ditolak",
 };
 
 export const statusColors: Record<ReportStatus, string> = {
@@ -60,6 +61,7 @@ export const statusColors: Record<ReportStatus, string> = {
   verified: "#2477d9",
   in_progress: "#f28c18",
   resolved: "#3ba765",
+  rejected: "#5a6472",
 };
 
 export function getCategory(slug: ReportCategorySlug) {

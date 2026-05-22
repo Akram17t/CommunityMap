@@ -16,6 +16,7 @@ async function runMigrations() {
       email VARCHAR(160) NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       role VARCHAR(20) NOT NULL CHECK (role IN ('citizen', 'admin')),
+      avatar_url TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
@@ -42,9 +43,12 @@ async function runMigrations() {
       address TEXT,
       district VARCHAR(120) NOT NULL DEFAULT '',
       status VARCHAR(30) NOT NULL DEFAULT 'new'
-        CHECK (status IN ('new', 'verified', 'in_progress', 'resolved')),
+        CHECK (status IN ('new', 'verified', 'in_progress', 'resolved', 'rejected')),
       is_verified BOOLEAN NOT NULL DEFAULT FALSE,
       upvote_count INT NOT NULL DEFAULT 0,
+      downvote_count INT NOT NULL DEFAULT 0,
+      rejection_reason TEXT,
+      rejected_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
@@ -56,6 +60,8 @@ async function runMigrations() {
       report_id UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
       image_url TEXT NOT NULL,
       storage_key TEXT NOT NULL,
+      kind VARCHAR(30) NOT NULL DEFAULT 'report'
+        CHECK (kind IN ('report', 'resolution_proof')),
       alt_text TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
@@ -67,6 +73,27 @@ async function runMigrations() {
       report_id UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       PRIMARY KEY (user_id, report_id)
+    )
+  `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS report_downvotes (
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      report_id UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (user_id, report_id)
+    )
+  `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS report_comments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      report_id UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      parent_id UUID REFERENCES report_comments(id) ON DELETE CASCADE,
+      body TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
 
@@ -83,6 +110,53 @@ async function runMigrations() {
   `);
 
   await query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS avatar_url TEXT
+  `);
+
+  await query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS username VARCHAR(50)
+  `);
+
+  // Fill existing users without username
+  await query(`
+    UPDATE users
+    SET username = LOWER(REGEXP_REPLACE(full_name, '[^a-zA-Z0-9]', '', 'g')) || '_' || substr(id::text, 1, 4)
+    WHERE username IS NULL
+  `);
+
+  if (getDatabaseMode() !== "memory") {
+    await query(`
+      ALTER TABLE users
+      ADD CONSTRAINT users_username_key UNIQUE (username)
+    `).catch(() => {}); // ignore if constraint already exists
+  }
+
+  await query(`
+    ALTER TABLE report_comments
+    ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES report_comments(id) ON DELETE CASCADE
+  `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS report_chats (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      report_id UUID NOT NULL UNIQUE REFERENCES reports(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS report_chat_messages (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      chat_id UUID NOT NULL REFERENCES report_chats(id) ON DELETE CASCADE,
+      sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      body TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await query(`
     ALTER TABLE reports
     ADD COLUMN IF NOT EXISTS reference_code VARCHAR(40)
   `);
@@ -93,9 +167,50 @@ async function runMigrations() {
   `);
 
   await query(`
+    ALTER TABLE reports
+    ADD COLUMN IF NOT EXISTS downvote_count INT NOT NULL DEFAULT 0
+  `);
+
+  await query(`
+    ALTER TABLE reports
+    ADD COLUMN IF NOT EXISTS rejection_reason TEXT
+  `);
+
+  await query(`
+    ALTER TABLE reports
+    ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMPTZ
+  `);
+
+  await query(`
     ALTER TABLE report_images
     ADD COLUMN IF NOT EXISTS alt_text TEXT
   `);
+
+  await query(`
+    ALTER TABLE report_images
+    ADD COLUMN IF NOT EXISTS kind VARCHAR(30) NOT NULL DEFAULT 'report'
+  `);
+
+  if (getDatabaseMode() !== "memory") {
+    await query(`
+      ALTER TABLE reports
+      DROP CONSTRAINT IF EXISTS reports_status_check
+    `);
+    await query(`
+      ALTER TABLE reports
+      ADD CONSTRAINT reports_status_check
+      CHECK (status IN ('new', 'verified', 'in_progress', 'resolved', 'rejected'))
+    `);
+    await query(`
+      ALTER TABLE report_images
+      DROP CONSTRAINT IF EXISTS report_images_kind_check
+    `);
+    await query(`
+      ALTER TABLE report_images
+      ADD CONSTRAINT report_images_kind_check
+      CHECK (kind IN ('report', 'resolution_proof'))
+    `);
+  }
 
   await query(`
     CREATE INDEX IF NOT EXISTS idx_reports_category_id ON reports(category_id)
@@ -108,6 +223,9 @@ async function runMigrations() {
   `);
   await query(`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_reports_reference_code ON reports(reference_code)
+  `);
+  await query(`
+    CREATE INDEX IF NOT EXISTS idx_report_comments_report_id ON report_comments(report_id)
   `);
 
   if (getDatabaseMode() !== "memory") {
@@ -157,22 +275,26 @@ async function seedDemoData() {
     for (const user of demoUsers) {
       await client.query(
         `
-          INSERT INTO users (id, full_name, email, password_hash, role)
-          VALUES ($1, $2, $3, $4, $5)
+          INSERT INTO users (id, username, full_name, email, password_hash, role, avatar_url)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
           ON CONFLICT (id) DO UPDATE
           SET
+            username = EXCLUDED.username,
             full_name = EXCLUDED.full_name,
             email = EXCLUDED.email,
             password_hash = EXCLUDED.password_hash,
             role = EXCLUDED.role,
+            avatar_url = EXCLUDED.avatar_url,
             updated_at = NOW()
         `,
         [
           user.id,
+          user.username,
           user.fullName,
           user.email,
           passwordHashes.get(user.email),
           user.role,
+          user.avatarUrl || null,
         ],
       );
     }
@@ -201,11 +323,15 @@ async function seedDemoData() {
             status,
             is_verified,
             upvote_count,
+            downvote_count,
+            rejection_reason,
+            rejected_at,
             created_at,
             updated_at
           )
           VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+            $11, $12, $13, $14, $15, $16, $17, $18
           )
           ON CONFLICT (id) DO UPDATE
           SET
@@ -221,6 +347,9 @@ async function seedDemoData() {
             status = EXCLUDED.status,
             is_verified = EXCLUDED.is_verified,
             upvote_count = EXCLUDED.upvote_count,
+            downvote_count = EXCLUDED.downvote_count,
+            rejection_reason = EXCLUDED.rejection_reason,
+            rejected_at = EXCLUDED.rejected_at,
             created_at = EXCLUDED.created_at,
             updated_at = EXCLUDED.updated_at
         `,
@@ -238,6 +367,9 @@ async function seedDemoData() {
           report.status,
           report.isVerified,
           report.upvoteCount,
+          report.downvoteCount || 0,
+          report.rejectionReason || null,
+          report.rejectedAt || null,
           report.createdAt,
           report.updatedAt,
         ],
@@ -245,8 +377,8 @@ async function seedDemoData() {
 
       await client.query(
         `
-          INSERT INTO report_images (id, report_id, image_url, storage_key, alt_text)
-          VALUES ($1, $2, $3, $4, $5)
+          INSERT INTO report_images (id, report_id, image_url, storage_key, kind, alt_text)
+          VALUES ($1, $2, $3, $4, 'report', $5)
         `,
         [
           report.image.id,
@@ -287,6 +419,17 @@ async function seedDemoData() {
         await client.query(
           `
             INSERT INTO report_upvotes (user_id, report_id)
+            VALUES ($1, $2)
+            ON CONFLICT (user_id, report_id) DO NOTHING
+          `,
+          [userId, report.id],
+        );
+      }
+
+      for (const userId of report.downvoterIds || []) {
+        await client.query(
+          `
+            INSERT INTO report_downvotes (user_id, report_id)
             VALUES ($1, $2)
             ON CONFLICT (user_id, report_id) DO NOTHING
           `,

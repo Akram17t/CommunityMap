@@ -19,11 +19,17 @@ import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getCategory, statusLabels } from "@/features/reports/catalog";
-import { verifyReport } from "@/lib/api/client";
+import { downloadAdminReportsCsv, verifyReport } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type { AppUser, Report, ReportStatus } from "@/types/community-map";
 
-const statuses: ReportStatus[] = ["new", "verified", "in_progress", "resolved"];
+const statuses: ReportStatus[] = [
+  "new",
+  "verified",
+  "in_progress",
+  "resolved",
+  "rejected",
+];
 
 export function AdminDashboard({
   initialReports,
@@ -36,6 +42,7 @@ export function AdminDashboard({
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ReportStatus | "all">("all");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const filteredReports = useMemo(
@@ -63,7 +70,14 @@ export function AdminDashboard({
     const resolvedReports = reports.filter(
       (report) => report.status === "resolved",
     ).length;
+    const rejectedReports = reports.filter(
+      (report) => report.status === "rejected",
+    ).length;
     const upvotes = reports.reduce((sum, report) => sum + report.upvoteCount, 0);
+    const downvotes = reports.reduce(
+      (sum, report) => sum + report.downvoteCount,
+      0,
+    );
 
     return {
       totalReports,
@@ -71,7 +85,9 @@ export function AdminDashboard({
       verifiedReports,
       inProgressReports,
       resolvedReports,
+      rejectedReports,
       upvotes,
+      downvotes,
     };
   }, [reports]);
 
@@ -93,6 +109,29 @@ export function AdminDashboard({
     });
   }
 
+  async function exportCsv() {
+    setFeedback(null);
+    setExporting(true);
+    try {
+      const blob = await downloadAdminReportsCsv();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `communitymap-reports-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setFeedback("Ekspor CSV berhasil dibuat.");
+    } catch (error) {
+      setFeedback(
+        error instanceof Error ? error.message : "Gagal membuat ekspor CSV.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <AdminShell currentUser={currentUser}>
       <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
@@ -104,18 +143,19 @@ export function AdminDashboard({
               penanganan.
             </p>
           </div>
-          <Button variant="secondary">
+          <Button variant="secondary" onClick={exportCsv} disabled={exporting}>
             <Download className="size-4" />
-            Ekspor
+            {exporting ? "Mengekspor..." : "Ekspor CSV"}
           </Button>
         </header>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           <MetricCard label="Total Laporan" value={stats.totalReports} helper="Data aktif saat ini" icon={FileCheck2} />
           <MetricCard label="Baru" value={stats.newReports} helper="Menunggu verifikasi" icon={Timer} tone="danger" />
           <MetricCard label="Diverifikasi" value={stats.verifiedReports} helper="Siap ditindaklanjuti" icon={ShieldCheck} tone="blue" />
           <MetricCard label="Sedang Diperbaiki" value={stats.inProgressReports} helper="Proses lapangan" icon={Timer} tone="amber" />
           <MetricCard label="Selesai" value={stats.resolvedReports} helper={`Total upvote ${stats.upvotes}`} icon={ShieldCheck} tone="green" />
+          <MetricCard label="Ditolak" value={stats.rejectedReports} helper={`Downvote ${stats.downvotes}`} icon={FileCheck2} tone="danger" />
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_340px]">
@@ -176,8 +216,8 @@ export function AdminDashboard({
                       <td className="px-3 py-3">
                         <div className="relative size-12 overflow-hidden rounded-md">
                           <Image
-                            src={report.images[0].imageUrl}
-                            alt={report.images[0].alt}
+                            src={report.images[0]?.imageUrl || "/images/report-road.svg"}
+                            alt={report.images[0]?.alt || report.title}
                             fill
                             sizes="48px"
                             className="object-cover"
@@ -199,14 +239,16 @@ export function AdminDashboard({
                       </td>
                       <td className="rounded-r-lg px-3 py-3">
                         <div className="flex gap-2">
-                          <Button
-                            variant="secondary"
-                            className="min-h-8 px-3 py-1 text-xs"
-                            onClick={() => quickVerify(report.id)}
-                            disabled={isPending}
-                          >
-                            {isPending ? "Menyimpan..." : "Tinjau"}
-                          </Button>
+                          {report.status === "new" && (
+                            <Button
+                              variant="secondary"
+                              className="min-h-8 px-3 py-1 text-xs"
+                              onClick={() => quickVerify(report.id)}
+                              disabled={isPending}
+                            >
+                              {isPending ? "Menyimpan..." : "Verifikasi"}
+                            </Button>
+                          )}
                           <Link
                             href={`/admin/reports/${report.id}`}
                             className="inline-flex min-h-8 items-center justify-center rounded-md border border-[var(--border)] bg-white px-3 text-xs font-bold"

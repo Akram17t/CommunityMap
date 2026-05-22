@@ -10,6 +10,7 @@ import {
   Popup,
   Source,
   type MapProps as MapLibreProps,
+  type MapMouseEvent,
   type ViewState,
 } from "react-map-gl/maplibre";
 import type { ReactNode } from "react";
@@ -25,12 +26,14 @@ export function Map({
   viewport,
   onViewportChange,
   className,
+  onMapClick,
 }: {
   children?: ReactNode;
   initialViewState?: Viewport;
   viewport?: Viewport;
   onViewportChange?: (viewport: Viewport) => void;
   className?: string;
+  onMapClick?: (coordinates: { longitude: number; latitude: number }) => void;
 }) {
   const props: MapLibreProps = viewport
     ? {
@@ -58,6 +61,12 @@ export function Map({
         {...props}
         mapStyle={DEFAULT_STYLE}
         attributionControl={false}
+        onClick={(event: MapMouseEvent) =>
+          onMapClick?.({
+            longitude: event.lngLat.lng,
+            latitude: event.lngLat.lat,
+          })
+        }
         style={{ width: "100%", height: "100%" }}
       >
         {children}
@@ -89,14 +98,30 @@ export function MapMarker({
   latitude,
   children,
   onClick,
+  draggable = false,
+  onDragEnd,
 }: {
   longitude: number;
   latitude: number;
   children: ReactNode;
   onClick?: () => void;
+  draggable?: boolean;
+  onDragEnd?: (coordinates: { longitude: number; latitude: number }) => void;
 }) {
   return (
-    <Marker longitude={longitude} latitude={latitude} anchor="bottom" onClick={onClick}>
+    <Marker
+      longitude={longitude}
+      latitude={latitude}
+      anchor="bottom"
+      draggable={draggable}
+      onClick={onClick}
+      onDragEnd={(event) =>
+        onDragEnd?.({
+          longitude: event.lngLat.lng,
+          latitude: event.lngLat.lat,
+        })
+      }
+    >
       {children}
     </Marker>
   );

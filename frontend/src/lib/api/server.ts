@@ -2,17 +2,29 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import type { AdminStats, AppUser, Report } from "@/types/community-map";
-import { API_BASE_URL, isNetworkError, readApiResponse } from "./base";
+import { SERVER_API_BASE_URL, isNetworkError, readApiResponse } from "./base";
 
 const devFallbackEnabled = process.env.NODE_ENV !== "production";
 
 export class ServerApiError extends Error {
   status: number;
+  code?: string;
+  details?: unknown;
+  requestId?: string | null;
 
-  constructor(status: number, message: string) {
+  constructor(
+    status: number,
+    message: string,
+    code?: string,
+    details?: unknown,
+    requestId?: string | null,
+  ) {
     super(message);
     this.name = "ServerApiError";
     this.status = status;
+    this.code = code;
+    this.details = details;
+    this.requestId = requestId;
   }
 }
 
@@ -29,7 +41,7 @@ async function serverRequest<T>(path: string, init?: RequestInit): Promise<T> {
     headers.set("cookie", cookieHeader);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${SERVER_API_BASE_URL}${path}`, {
     ...init,
     cache: "no-store",
     headers,
@@ -37,7 +49,8 @@ async function serverRequest<T>(path: string, init?: RequestInit): Promise<T> {
 
   return readApiResponse(
     response,
-    (status, message) => new ServerApiError(status, message),
+    (status, message, code, details, requestId) =>
+      new ServerApiError(status, message, code, details, requestId),
     "Gagal mengambil data dari backend.",
   );
 }
@@ -53,13 +66,63 @@ function logDevFallback(path: string, error: unknown) {
   );
 }
 
-export async function getReports(): Promise<Report[]> {
+export async function getReports(params?: {
+  referenceCode?: string;
+  category?: string;
+  status?: string;
+  sort?: string;
+  district?: string;
+  search?: string;
+  dateRange?: string;
+  reporterId?: string;
+}): Promise<Report[]> {
   try {
-    return await serverRequest<Report[]>("/reports");
+    const searchParams = new URLSearchParams();
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        if (value) {
+          searchParams.append(key, value);
+        }
+      }
+    }
+    const queryString = searchParams.toString();
+    const endpoint = queryString ? `/reports?${queryString}` : "/reports";
+    const response = await serverRequest<Report[]>(endpoint);
+    return response || [];
   } catch (error) {
     if (shouldUseDevFallback(error)) {
       logDevFallback("/reports", error);
       return [];
+    }
+
+    throw error;
+  }
+}
+
+export async function getAdminReports(): Promise<Report[]> {
+  try {
+    return await serverRequest<Report[]>("/admin/reports");
+  } catch (error) {
+    if (shouldUseDevFallback(error)) {
+      logDevFallback("/admin/reports", error);
+      return [];
+    }
+
+    throw error;
+  }
+}
+
+export async function getAdminReportById(id: string): Promise<Report | undefined> {
+  try {
+    return await serverRequest<Report>(`/admin/reports/${id}`);
+  } catch (error) {
+    if (error instanceof ServerApiError && error.status === 404) {
+      return undefined;
+    }
+
+    if (shouldUseDevFallback(error)) {
+      logDevFallback(`/admin/reports/${id}`, error);
+      return undefined;
     }
 
     throw error;
@@ -133,10 +196,24 @@ export async function getAdminStats(): Promise<AdminStats> {
         verifiedReports: 0,
         inProgressReports: 0,
         resolvedReports: 0,
+        rejectedReports: 0,
         upvotes: 0,
+        downvotes: 0,
       };
     }
 
+    throw error;
+  }
+}
+
+export async function getUserByUsername(username: string): Promise<AppUser | null> {
+  try {
+    const data = await serverRequest<{ user: AppUser }>(`/users/${username}`);
+    return data.user;
+  } catch (error) {
+    if (error instanceof ServerApiError && error.status === 404) {
+      return null;
+    }
     throw error;
   }
 }

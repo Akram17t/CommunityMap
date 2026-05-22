@@ -10,6 +10,7 @@ import type { UserRole } from "@/types/community-map";
 
 export function AuthCard({ mode }: { mode: "login" | "register" }) {
   const [role, setRole] = useState<UserRole>("citizen");
+  const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,7 +64,17 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         {isRegister && (
           <AuthField
             icon={UserRound}
+            label="Username"
+            placeholder="Contoh: budi_santoso"
+            value={username}
+            onChange={setUsername}
+          />
+        )}
+        {isRegister && (
+          <AuthField
+            icon={UserRound}
             label="Nama Lengkap"
+            placeholder="Contoh: Budi Santoso"
             value={fullName}
             onChange={setFullName}
           />
@@ -71,6 +82,8 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         <AuthField
           icon={Mail}
           label="Email"
+          type="email"
+          placeholder={isRegister ? "Contoh: budi@email.com" : "Email akun kamu"}
           value={email}
           onChange={setEmail}
         />
@@ -78,6 +91,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
           icon={LockKeyhole}
           label="Password"
           type="password"
+          placeholder="••••••••"
           value={password}
           onChange={setPassword}
         />
@@ -90,12 +104,12 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
                 setFeedback(null);
 
                 if (isRegister) {
-                  await register({ fullName, email, password, role: "citizen" });
+                  await register({ username, fullName, email, password, role: "citizen" });
+                  window.location.assign("/settings"); // Redirect to settings to setup profile picture
                 } else {
                   await login({ email, password });
+                  window.location.assign(role === "admin" ? "/admin" : "/history");
                 }
-
-                window.location.assign(role === "admin" ? "/admin" : "/history");
               } catch (error) {
                 setFeedback(
                   error instanceof Error ? error.message : "Autentikasi gagal.",
@@ -115,23 +129,26 @@ function AuthField({
   icon: Icon,
   label,
   type = "text",
+  placeholder,
   value,
   onChange,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   type?: string;
+  placeholder?: string;
   value: string;
   onChange: (value: string) => void;
 }) {
   return (
     <label className="flex flex-col gap-2 text-sm font-semibold">
       {label}
-      <span className="flex h-11 items-center gap-2 rounded-md border border-[var(--border)] bg-white px-3">
+      <span className="flex h-11 items-center gap-2 rounded-md border border-[var(--border)] bg-white px-3 focus-within:border-[var(--teal)] focus-within:ring-1 focus-within:ring-[var(--teal)]">
         <Icon className="size-4 text-[var(--muted)]" />
         <input
-          className="w-full bg-transparent text-sm outline-none"
+          className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--muted)]/50"
           type={type}
+          placeholder={placeholder}
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { ReportDetail } from "@/components/report/report-detail";
-import { getReportById } from "@/lib/api/server";
+import { getReportById, safeGetCurrentUser } from "@/lib/api/server";
 
 export default async function ReportDetailPage({
   params,
@@ -11,6 +11,7 @@ export default async function ReportDetailPage({
 }) {
   const { id } = await params;
   const report = await getReportById(id);
+  const currentUser = await safeGetCurrentUser();
 
   if (!report) {
     notFound();
@@ -20,7 +21,7 @@ export default async function ReportDetailPage({
     <>
       <AppHeader />
       <main className="min-h-screen bg-[var(--background)] px-4 py-8 sm:px-6 lg:px-8">
-        <ReportDetail report={report} />
+        <ReportDetail report={report} currentUser={currentUser} />
       </main>
       <SiteFooter />
     </>

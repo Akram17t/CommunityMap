@@ -20,7 +20,7 @@ async function attachCurrentUser(req, _res, next) {
     const payload = verifyToken(token);
     const result = await query(
       `
-        SELECT id, full_name, email, role
+        SELECT id, username, full_name, email, role, avatar_url
         FROM users
         WHERE id = $1
       `,

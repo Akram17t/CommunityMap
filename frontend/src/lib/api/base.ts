@@ -1,9 +1,19 @@
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
+/** Client-side: use relative path so requests go through Next.js rewrites (same origin as the cookie). */
+export const CLIENT_API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
+
+/** Server-side (RSC / Route Handler): talk to the backend directly. */
+export const SERVER_API_BASE_URL =
+  process.env.INTERNAL_API_URL
+    ? `${process.env.INTERNAL_API_URL}/api`
+    : "http://127.0.0.1:4000/api";
 
 type ErrorFactory<TError extends Error> = (
   status: number,
   message: string,
+  code?: string,
+  details?: unknown,
+  requestId?: string | null,
 ) => TError;
 
 export async function readApiResponse<T, TError extends Error>(
@@ -14,9 +24,13 @@ export async function readApiResponse<T, TError extends Error>(
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    const errorPayload = payload?.error || {};
     throw createError(
       response.status,
-      payload?.error?.message || defaultMessage,
+      errorPayload.message || defaultMessage,
+      errorPayload.code,
+      errorPayload.details,
+      errorPayload.requestId || response.headers.get("x-request-id"),
     );
   }
 

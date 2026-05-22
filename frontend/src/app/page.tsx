@@ -8,9 +8,9 @@ import {
 import { PublicMap } from "@/components/map/public-map";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { AppHeader } from "@/components/layout/app-header";
+import { LandingHeader } from "@/components/layout/landing-header";
 import { HeroScene } from "@/components/landing/hero-scene";
-import { getReports } from "@/lib/api/server";
+import { getReports, safeGetCurrentUser } from "@/lib/api/server";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { AboutSection } from "@/components/landing/about-section";
 
@@ -33,7 +33,10 @@ const steps = [
 ];
 
 export default async function HomePage() {
-  const reports = await getReports();
+  const [reports, currentUser] = await Promise.all([
+    getReports(),
+    safeGetCurrentUser(),
+  ]);
   const adminHighlights = [
     {
       value: String(reports.filter((report) => report.status === "new").length),
@@ -58,14 +61,17 @@ export default async function HomePage() {
 
   return (
     <>
-      <AppHeader dark />
+      <LandingHeader currentUser={currentUser} />
       <main>
-        <HeroScene />
+        <section id="hero">
+          <HeroScene />
+        </section>
 
-        {/* About Section with scroll-driven logo animation */}
-        <AboutSection />
+        <section id="tentang">
+          <AboutSection />
+        </section>
 
-        <section className="bg-white py-16">
+        <section id="alur" className="bg-white py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-black text-[var(--asphalt)]">
@@ -95,7 +101,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="bg-[var(--background)] py-16">
+        <section id="peta-preview" className="bg-[var(--background)] py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
               <div>
@@ -115,7 +121,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="bg-white py-16">
+        <section id="admin-preview" className="bg-white py-16">
           <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.85fr_1.15fr] lg:px-8">
             <div className="sticky top-24 h-fit">
               <h2 className="text-3xl font-black text-[var(--asphalt)]">

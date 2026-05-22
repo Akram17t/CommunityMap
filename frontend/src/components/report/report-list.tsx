@@ -16,8 +16,8 @@ export function ReportList({ reports }: { reports: Report[] }) {
         >
           <div className="relative h-24 overflow-hidden rounded-md bg-[var(--surface-strong)] sm:h-20">
             <Image
-              src={report.images[0].imageUrl}
-              alt={report.images[0].alt}
+              src={report.images[0]?.imageUrl || "/images/report-road.svg"}
+              alt={report.images[0]?.alt || report.title}
               fill
               sizes="120px"
               className="object-cover"

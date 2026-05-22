@@ -3,7 +3,7 @@ import { AdminShell } from "@/components/layout/admin-shell";
 import { AdminReportDetail } from "@/components/dashboard/admin-report-detail";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getReportById, safeGetCurrentUser } from "@/lib/api/server";
+import { getAdminReportById, safeGetCurrentUser } from "@/lib/api/server";
 
 export default async function AdminReportDetailPage({
   params,
@@ -34,7 +34,7 @@ export default async function AdminReportDetailPage({
   }
 
   const { id } = await params;
-  const report = await getReportById(id);
+  const report = await getAdminReportById(id);
 
   if (!report) {
     notFound();

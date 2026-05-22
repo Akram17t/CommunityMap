@@ -1,7 +1,7 @@
 import { AdminDashboard } from "@/components/dashboard/admin-dashboard";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getReports, safeGetCurrentUser } from "@/lib/api/server";
+import { getAdminReports, safeGetCurrentUser } from "@/lib/api/server";
 
 export default async function AdminPage() {
   const currentUser = await safeGetCurrentUser();
@@ -30,7 +30,7 @@ export default async function AdminPage() {
     );
   }
 
-  const reports = await getReports();
+  const reports = await getAdminReports();
 
   return <AdminDashboard initialReports={reports} currentUser={currentUser} />;
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   BarChart3,
   ClipboardList,
@@ -6,15 +8,17 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { cn } from "@/lib/utils";
 import type { AppUser } from "@/types/community-map";
 
 const adminNav = [
   { label: "Ringkasan", href: "/admin", icon: BarChart3 },
-  { label: "Laporan Masuk", href: "/admin#reports", icon: ClipboardList },
-  { label: "Verifikasi", href: "/admin#verification", icon: ShieldCheck },
+  { label: "Laporan Masuk", href: "/admin/reports", icon: ClipboardList },
+  { label: "Verifikasi", href: "/admin/verification", icon: ShieldCheck },
   { label: "Peta Pantau", href: "/map", icon: MapPinned },
-  { label: "Pengaturan", href: "/admin#settings", icon: Settings },
+  { label: "Pengaturan", href: "/admin/settings", icon: Settings },
 ];
 
 export function AdminShell({
@@ -24,6 +28,8 @@ export function AdminShell({
   children: React.ReactNode;
   currentUser: AppUser;
 }) {
+  const pathname = usePathname();
+
   return (
     <div className="min-h-screen bg-[var(--background)]">
       <aside className="fixed inset-y-0 left-0 hidden w-56 flex-col bg-[var(--asphalt)] text-white lg:flex">
@@ -37,17 +43,22 @@ export function AdminShell({
           </div>
         </div>
         <nav className="flex flex-1 flex-col gap-1 px-3 py-5">
-          {adminNav.map((item, index) => {
+          {adminNav.map((item) => {
             const Icon = item.icon;
+            const active =
+              pathname === item.href ||
+              (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={
-                  index === 0
-                    ? "flex items-center gap-3 rounded-md bg-[var(--teal)] px-3 py-2.5 text-sm font-semibold"
-                    : "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold text-white/68 transition hover:bg-white/8 hover:text-white"
-                }
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition",
+                  active
+                    ? "bg-[var(--teal)] text-white"
+                    : "text-white/68 hover:bg-white/8 hover:text-white",
+                )}
+                aria-current={active ? "page" : undefined}
               >
                 <Icon className="size-4" />
                 {item.label}
