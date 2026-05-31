@@ -4,7 +4,9 @@ import { cookies } from "next/headers";
 import type { AdminStats, AppUser, Report } from "@/types/community-map";
 import { SERVER_API_BASE_URL, isNetworkError, readApiResponse } from "./base";
 
-const devFallbackEnabled = process.env.NODE_ENV !== "production";
+function shouldUseDevFallback(error: unknown) {
+  return isNetworkError(error);
+}
 
 export class ServerApiError extends Error {
   status: number;
@@ -53,10 +55,6 @@ async function serverRequest<T>(path: string, init?: RequestInit): Promise<T> {
       new ServerApiError(status, message, code, details, requestId),
     "Gagal mengambil data dari backend.",
   );
-}
-
-function shouldUseDevFallback(error: unknown) {
-  return devFallbackEnabled && isNetworkError(error);
 }
 
 function logDevFallback(path: string, error: unknown) {
