@@ -8,7 +8,7 @@ import { StatusBadge } from "@/components/ui/badge";
 import { ReportDetail } from "@/components/report/report-detail";
 import { statusLabels } from "@/features/reports/catalog";
 import { rejectReport, updateReportStatus, uploadAsset } from "@/lib/api/client";
-import type { Report, ReportImage, ReportStatus } from "@/types/community-map";
+import type { AppUser, Report, ReportImage, ReportStatus } from "@/types/community-map";
 
 const statuses: ReportStatus[] = [
   "new",
@@ -18,7 +18,7 @@ const statuses: ReportStatus[] = [
   "rejected",
 ];
 
-export function AdminReportDetail({ report: initialReport }: { report: Report }) {
+export function AdminReportDetail({ report: initialReport, currentUser }: { report: Report; currentUser: AppUser | null }) {
   const [report, setReport] = useState(initialReport);
   const [nextStatus, setNextStatus] = useState<ReportStatus>(initialReport.status);
   const [note, setNote] = useState("");
@@ -205,7 +205,7 @@ export function AdminReportDetail({ report: initialReport }: { report: Report })
           </Button>
         </div>
       </Card>
-      <ReportDetail report={report} admin />
+      <ReportDetail report={report} currentUser={currentUser} admin />
     </div>
   );
 }

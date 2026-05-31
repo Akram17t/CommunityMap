@@ -43,7 +43,7 @@ export default async function AdminReportDetailPage({
   return (
     <AdminShell currentUser={currentUser}>
       <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
-        <AdminReportDetail report={report} />
+        <AdminReportDetail report={report} currentUser={currentUser} />
       </main>
     </AdminShell>
   );
