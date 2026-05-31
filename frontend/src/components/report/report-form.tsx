@@ -52,6 +52,7 @@ export function ReportForm() {
       county?: string;
       town?: string;
       village?: string;
+      suburb?: string;
       state_district?: string;
     };
   }
